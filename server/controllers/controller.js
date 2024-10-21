@@ -68,3 +68,22 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+
+// Fetch user details by user_id
+exports.getUserDetails = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Fetch user details based on userId
+    const user = await User.findById(userId).select('-password');  // Exclude the password from the response
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error('Error fetching user details:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};

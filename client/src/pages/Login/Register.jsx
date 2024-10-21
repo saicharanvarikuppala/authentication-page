@@ -55,7 +55,7 @@ const Register = () => {
     <Container maxWidth="xs">
       <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <Typography component="h1" variant="h5">
-          Sign Up
+          Register
         </Typography>
         <Formik
           initialValues={getInitialValues()} 
