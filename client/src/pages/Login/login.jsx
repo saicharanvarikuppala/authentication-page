@@ -30,6 +30,7 @@ const Login = () => {
           password: values.password,
         }
       );
+      localStorage.setItem('userId', response.data.userId);
       navigate("/dashboard");
       console.log(response.data);
     } catch (error) {
