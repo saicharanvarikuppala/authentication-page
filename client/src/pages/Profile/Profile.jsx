@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, CircularProgress, Button, TextField } from "@mui/material";
+import {
+  Box,
+  Typography,
+  CircularProgress,
+  Button,
+  TextField,
+} from "@mui/material";
 import axios from "axios";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import ConfirmationModal from "./ConfirmationModal";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setUserDetails } from "./UserSlice";
 
 const Profile = () => {
   const [userData, setUserData] = useState(null);
@@ -13,6 +21,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const dispatch = useDispatch();
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
 
@@ -23,6 +32,7 @@ const Profile = () => {
           `http://localhost:5000/api/user/${userId}`
         );
         setUserData(response.data);
+        dispatch(setUserDetails(response.data));
         setLoading(false);
       } catch (err) {
         setError("Failed to fetch user data");
@@ -31,7 +41,7 @@ const Profile = () => {
     };
 
     fetchUserData();
-  }, [userId]);
+  }, [userId, dispatch]);
 
   const confirmDelete = async () => {
     try {
@@ -51,6 +61,7 @@ const Profile = () => {
         values
       );
       setUserData(response.data);
+      dispatch(setUserDetails(response.data));
       setIsEditing(false);
     } catch (err) {
       setError("Failed to update user data");
@@ -141,10 +152,16 @@ const Profile = () => {
             </Formik>
           ) : (
             <>
-              <Typography variant="body1">First Name: {userData.firstName}</Typography>
-              <Typography variant="body1">Last Name: {userData.lastName}</Typography>
+              <Typography variant="body1">
+                First Name: {userData.firstName}
+              </Typography>
+              <Typography variant="body1">
+                Last Name: {userData.lastName}
+              </Typography>
               <Typography variant="body1">Email: {userData.email}</Typography>
-              <Typography variant="body1">Mobile Number: {userData.mobileNumber}</Typography>
+              <Typography variant="body1">
+                Mobile Number: {userData.mobileNumber}
+              </Typography>
               <Button
                 variant="contained"
                 color="primary"
