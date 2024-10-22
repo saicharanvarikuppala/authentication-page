@@ -5,6 +5,7 @@ import {
   CircularProgress,
   Button,
   TextField,
+  Stack,
 } from "@mui/material";
 import axios from "axios";
 import { Formik, Form, Field } from "formik";
@@ -13,6 +14,15 @@ import ConfirmationModal from "./ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUserDetails } from "./UserSlice";
+import ModalComponent from "./Modal";
+
+const editUserSchema = Yup.object().shape({
+  firstName: Yup.string().required("Required"),
+  lastName: Yup.string().required("Required"),
+  email: Yup.string().email("Invalid email").required("Required"),
+  mobileNumber: Yup.string().required("Required"),
+  profileImage: Yup.mixed().required("A file is required"),
+});
 
 const Profile = () => {
   const [userData, setUserData] = useState(null);
@@ -24,6 +34,14 @@ const Profile = () => {
   const dispatch = useDispatch();
   const userId = localStorage.getItem("userId");
   const navigate = useNavigate();
+
+  const getInitialValues = () => ({
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    email: userData.email,
+    mobileNumber: userData.mobileNumber,
+    profileImage: null,
+  });
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -55,12 +73,27 @@ const Profile = () => {
   };
 
   const handleSubmit = async (values) => {
+    const formData = new FormData();
+    formData.append("firstName", values.firstName);
+    formData.append("lastName", values.lastName);
+    formData.append("email", values.email);
+    formData.append("mobileNumber", values.mobileNumber);
+    if (values.profileImage) {
+      formData.append("profileImage", values.profileImage);
+    }
+
     try {
       const response = await axios.put(
         `http://localhost:5000/api/user/${userId}`,
-        values
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
       setUserData(response.data);
+      console.log(response.data);
       dispatch(setUserDetails(response.data));
       setIsEditing(false);
     } catch (err) {
@@ -81,38 +114,33 @@ const Profile = () => {
       <Typography variant="h4">Profile</Typography>
       {userData ? (
         <Box sx={{ mt: 2 }}>
-          {isEditing ? (
+          <ModalComponent
+            open={isEditing}
+            onClose={() => setIsEditing(false)}
+            title="Edit User Details"
+            sx={{ width: 400, mx: "auto", mt: 3, background: "#fff" }}
+          >
             <Formik
-              initialValues={{
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-                email: userData.email,
-                mobileNumber: userData.mobileNumber,
-              }}
-              validationSchema={Yup.object({
-                firstName: Yup.string().required("Required"),
-                lastName: Yup.string().required("Required"),
-                email: Yup.string().email("Invalid email").required("Required"),
-                mobileNumber: Yup.string().required("Required"),
-              })}
+              initialValues={getInitialValues()}
+              validationSchema={editUserSchema}
               onSubmit={handleSubmit}
             >
-              {({ handleChange }) => (
+              {({ setFieldValue }) => (
                 <Form>
                   <Field
                     name="firstName"
                     as={TextField}
                     label="First Name"
                     fullWidth
-                    onChange={handleChange}
-                    sx={{ mb: 2 }}
+                    // onChange={handleChange}
+                    sx={{ mb: 2, mt: 2 }}
                   />
                   <Field
                     name="lastName"
                     as={TextField}
                     label="Last Name"
                     fullWidth
-                    onChange={handleChange}
+                    // onChange={handleChange}
                     sx={{ mb: 2 }}
                   />
                   <Field
@@ -120,7 +148,7 @@ const Profile = () => {
                     as={TextField}
                     label="Email"
                     fullWidth
-                    onChange={handleChange}
+                    // onChange={handleChange}
                     sx={{ mb: 2 }}
                   />
                   <Field
@@ -128,58 +156,81 @@ const Profile = () => {
                     as={TextField}
                     label="Mobile Number"
                     fullWidth
-                    onChange={handleChange}
+                    // onChange={handleChange}
                     sx={{ mb: 2 }}
                   />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    sx={{ mt: 2 }}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={() => setIsEditing(false)}
-                    sx={{ ml: 2, mt: 2 }}
-                  >
-                    Cancel
-                  </Button>
+                  <input
+                    type="file"
+                    name="profileImage"
+                    onChange={(event) =>
+                      setFieldValue(
+                        "profileImage",
+                        event.currentTarget.files[0]
+                      )
+                    }
+                    style={{ marginBottom: "16px" }}
+                  />
+                  <Stack flexDirection={"row"}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      sx={{ mt: 2 }}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={() => setIsEditing(false)}
+                      sx={{ ml: 2, mt: 2 }}
+                    >
+                      Cancel
+                    </Button>
+                  </Stack>
                 </Form>
               )}
             </Formik>
-          ) : (
-            <>
-              <Typography variant="body1">
-                First Name: {userData.firstName}
-              </Typography>
-              <Typography variant="body1">
-                Last Name: {userData.lastName}
-              </Typography>
-              <Typography variant="body1">Email: {userData.email}</Typography>
-              <Typography variant="body1">
-                Mobile Number: {userData.mobileNumber}
-              </Typography>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => setIsEditing(true)}
-                sx={{ mt: 2 }}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                onClick={() => setShowDeleteModal(true)}
-                sx={{ ml: 2, mt: 2 }}
-              >
-                Delete
-              </Button>
-            </>
-          )}
+          </ModalComponent>
+          <>
+            {userData.profileImage && (
+              <img
+                src={`http://localhost:5000/${userData.profileImage.replace(
+                  /\\/g,
+                  "/"
+                )}`}
+                alt="Profile"
+                style={{ width: 100, height: 100 }}
+              />
+            )}
+            <Typography variant="body1">
+              First Name: {userData.firstName}
+            </Typography>
+            <Typography variant="body1">
+              Last Name: {userData.lastName}
+            </Typography>
+            <Typography variant="body1">Email: {userData.email}</Typography>
+            <Typography variant="body1">
+              Mobile Number: {userData.mobileNumber}
+            </Typography>
+
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setIsEditing(true)}
+              sx={{ mt: 2 }}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => setShowDeleteModal(true)}
+              sx={{ ml: 2, mt: 2 }}
+            >
+              Delete
+            </Button>
+          </>
         </Box>
       ) : (
         <Typography>No user data found</Typography>

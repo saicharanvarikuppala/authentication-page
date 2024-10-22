@@ -92,11 +92,12 @@ exports.getUserDetails = async (req, res) => {
 exports.updateUser = async (req, res) => {
   const { userId } = req.params;
   const { firstName, lastName, email, mobileNumber } = req.body;
+  const profileImage = req.file ? req.file.path : null;
 
   try {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { firstName, lastName, email, mobileNumber },
+      {firstName, lastName, email, mobileNumber, profileImage},
       { new: true }
     );
 
@@ -121,3 +122,17 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
+
+exports.getImage=async (req, res) =>{
+  const { userId } = req.params;
+  User.findById(userId)
+    .then(user => {
+      if (!user || !user.profileImage) {
+        return res.status(404).send('Image not found');
+      }
+      // Send the image file
+      res.sendFile(path.join(__dirname, user.profileImage));
+      
+    })
+    .catch(err => res.status(500).json({ message: 'Server error', error: err.message }));
+}

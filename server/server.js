@@ -6,10 +6,16 @@ const userRoutes = require("./routes/routes");
 require("dotenv").config();
 
 const app = express();
+const path = require('path');
+
+
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the uploads folder
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const DATABASE_URL = process.env.CONNECTION_URL;
 
