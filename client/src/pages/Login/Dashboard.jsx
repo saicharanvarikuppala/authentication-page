@@ -87,11 +87,6 @@ const Dashboard = () => {
   
           <Header handleToggleSidebar={handleToggleSidebar} />
         </Box>
-
-        {/* Main content below the header */}
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h4">Welcome to the Dashboard</Typography>
-        </Box>
       </Box>
     </Box>
   );
